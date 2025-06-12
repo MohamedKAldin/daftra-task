@@ -1,10 +1,12 @@
 import axios from 'axios';
 import Product from '../models/Product.js';
+import ApiEndpoints from '../ApiEndpoints.js';
 
 const ProductService = {
-  async getAllProducts(page = 1, limit = 7) {
+  async getAllProducts(page = 1, limit = 7) 
+  {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`http://localhost:8000/api/products?page=${page}&limit=${limit}`, {
+    const response = await axios.get(`${ApiEndpoints.products}?page=${page}&limit=${limit}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
