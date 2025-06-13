@@ -74,6 +74,36 @@
   }
   ```
 
+#### Get Product By ID
+- **URL**: `http://localhost:8000/api/products/getProductById`
+- **Method**: `POST`
+- **Description**: Get detailed information about a specific product by its ID or array of Ids to use for The Cart Page
+- **Headers**: `Authorization: Bearer {token}`
+- **Request Body**:
+  ```json
+  {
+    "id": "number | number[]"  // Single product ID or array of product IDs
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "data": [
+      {
+        "id": "number",
+        "name": "string",
+        "description": "string",
+        "category": "string",
+        "price": "number",
+        "stock": "number",
+        "image_url": "string",
+        "created_at": "string",
+        "updated_at": "string"
+      }
+    ]
+  }
+  ```
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -119,7 +149,7 @@
 You can use the following test credentials to access the system:
 
 - **Email**: muhammedk.aldin@gmail.com
-- **Password**: 123456
+- **Password**: Test@123456
 
 ## Running Both Backend and Frontend
 

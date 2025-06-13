@@ -3,7 +3,7 @@
 ## Project Architecture
 
 ### Frontend (React)
-- **Location**: `/frontend`
+- **Location**: `/public/frontend`
 - **Port**: 5173
 - **Key Features**:
   - React-based SPA
@@ -12,7 +12,7 @@
   - Local storage for token management
 
 ### Backend (Laravel)
-- **Location**: `/backend`
+- **Location**: `/`
 - **Port**: 8000
 - **Framework**: Laravel with Sanctum
 - **Database**: MySQL
@@ -34,18 +34,18 @@
 - Input sanitization on all endpoints
 
 ### Rate Limiting
-1. **Authentication Routes** (5 requests/minute):
+1. **Authentication Routes** (10 requests/minute):
    - `/api/login`
    - `/api/register`
    - `/api/user`
    - `/api/logout`
 
-2. **Product Routes** (30 requests/minute):
+2. **Product Routes** (60 requests/minute):
    - `/api/products`
    - `/api/products/{product}`
    - `/api/products/categories`
 
-3. **General API** (60 requests/minute):
+3. **General API** (120 requests/minute):
    - Cart endpoints
    - Transaction endpoints
    - Other API endpoints
@@ -87,14 +87,13 @@
 
 ### Frontend 
 ```bash
-cd frontend
+cd public/frontend
 npm install
 npm run dev
 ```
 
 ### Backend
 ```bash
-cd backend
 composer install
 php artisan migrate:fresh --seed
 php artisan serve
@@ -102,7 +101,7 @@ php artisan serve
 
 ## Test Credentials
 - Email: muhammedk.aldin@gmail.com
-- Password: 123456
+- Password: Test@123456
 
 ## Security Headers
 - Rate limit information
