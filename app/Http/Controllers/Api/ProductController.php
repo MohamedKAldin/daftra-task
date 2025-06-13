@@ -23,6 +23,10 @@ class ProductController extends Controller
         if ($request->has('category')) {
             $query->where('category', $request->category);
         }
+
+        if ($request->has('min_price') && $request->has('max_price')) {
+            $query->whereBetween('price', [$request->min_price, $request->max_price]);
+        }
     
         if ($request->has('sort')) {
             $direction = $request->direction ?? 'asc';
@@ -49,5 +53,16 @@ class ProductController extends Controller
     {
         $categories = Product::distinct()->pluck('category');
         return response()->json($categories);
+    }
+
+    public function getProductById(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer'
+        ]);
+
+        $products = Product::whereIn('id', $request->ids)->get();
+        return response()->json(['data' => $products]);
     }
 } 

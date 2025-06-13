@@ -19,28 +19,24 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('throttle:auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 // Protected routes
 Route::middleware(['auth:sanctum', 'api.token'])->group(function () {
     // Auth routes
-    Route::get('/user', [AuthController::class, 'user']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::middleware('throttle:auth')->group(function () {
+        Route::get('/user', [AuthController::class, 'user']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
 
     // Product routes
-    Route::get('/products', [ProductController::class, 'index']);
-    Route::get('/products/{product}', [ProductController::class, 'show']);
-    Route::get('/products/categories', [ProductController::class, 'categories']);
-
-    // Cart routes
-    Route::get('/cart', [CartController::class, 'index']);
-    Route::post('/cart/add', [CartController::class, 'addItem']);
-    Route::put('/cart/items/{cartItem}', [CartController::class, 'updateItem']);
-    Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeItem']);
-
-    // Transaction routes
-    Route::get('/transactions', [TransactionController::class, 'index']);
-    Route::post('/transactions', [TransactionController::class, 'store']);
-    Route::get('/transactions/{transaction}', [TransactionController::class, 'show']);
+    Route::middleware('throttle:products')->group(function () {
+        Route::get('/products', [ProductController::class, 'index']);
+        Route::get('/products/{product}', [ProductController::class, 'show']);
+        Route::get('/products/categories', [ProductController::class, 'categories']);
+        Route::post('/products/getProductById', [ProductController::class, 'getProductById']);
+    });
 });

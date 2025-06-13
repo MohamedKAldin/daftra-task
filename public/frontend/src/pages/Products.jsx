@@ -11,10 +11,17 @@ function Products() {
   const [cartItems, setCartItems] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterPrice, setFilterPrice] = useState([0, 300]);
+  const [filterName, setFilterName] = useState('');
 
   const fetchProducts = (page) => {
     setProductsLoading(true);
-    ProductService.getAllProducts(page)
+    ProductService.getAllProducts(page, 7, {
+      search: filterName,
+      minPrice: filterPrice[0],
+      maxPrice: filterPrice[1]
+    })
       .then(({ items, total, perPage, currentPage, lastPage }) => {
         setProducts(items);
         setCurrentPage(currentPage);
@@ -82,28 +89,126 @@ function Products() {
     });
   };
 
+  const handleDeleteItem = (productId) => {
+    setQuantities(prev => {
+      const newQuantities = { ...prev };
+      delete newQuantities[productId];
+      localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
+      return newQuantities;
+    });
+
+    setCartItems(prev => {
+      const newCart = { ...prev };
+      delete newCart[productId];
+      localStorage.setItem('cartItems', JSON.stringify(newCart));
+      return newCart;
+    });
+  };
+
+  const handleClearCart = () => {
+    setQuantities({});
+    setCartItems({});
+    localStorage.removeItem('cartQuantities');
+    localStorage.removeItem('cartItems');
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!user) return <div>No user data found.</div>;
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 position-relative">
+      {/* Filter Drawer */}
+      <div
+        className={`filter-drawer position-fixed top-0 start-0 h-100 bg-white shadow p-4${showFilter ? ' show' : ''}`}
+        style={{ 
+          width: '300px', 
+          zIndex: 1100,
+          transform: showFilter ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease-in-out'
+        }}
+      >
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h5 className="mb-0">Filters</h5>
+          <button className="btn btn-link text-dark" onClick={() => setShowFilter(false)}>
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        {/* Price Filter */}
+        <div className="mb-4">
+          <label className="form-label fw-bold">Price</label>
+          <input
+            type="range"
+            min="0"
+            max="300"
+            value={filterPrice[1]}
+            onChange={e => setFilterPrice([0, Number(e.target.value)])}
+            className="form-range"
+          />
+          <div className="d-flex justify-content-between">
+            <span>$0</span>
+            <span>${filterPrice[1]}</span>
+          </div>
+        </div>
+        {/* Name Filter */}
+        <div className="mb-4">
+          <label className="form-label fw-bold">Name</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by name"
+            value={filterName}
+            onChange={e => setFilterName(e.target.value)}
+          />
+        </div>
+        <button className="btn btn-dark w-100" onClick={() => {
+          setShowFilter(false);
+          fetchProducts(1); // Reset to first page when applying filters
+        }}>
+          Apply Filter
+        </button>
+
+      </div>
+
+      {/* Overlay when drawer is open */}
+      {showFilter && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100"
+          style={{ background: 'rgba(0,0,0,0.2)', zIndex: 1090 }}
+          onClick={() => setShowFilter(false)}
+        ></div>
+      )}
+
+      {/* Products */}
       <div className="row">
-        <div className="col-7">
+        <div className="col-12 col-lg-8">
           <div className="mt-5">
-            <h4><b>Casual</b></h4>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              {/* Category Name */}
+              <h4><b>Casual</b></h4>
+
+              {/* Filter Button */}
+              <button
+                className="btn btn-light"
+                style={{ width: 73, height: 73, fontSize: 30 }}
+                onClick={() => setShowFilter(true)}
+              >
+                <i className="fa-solid fa-sliders"></i>
+              </button>
+            </div>
+            
             {productsLoading && <div>Loading products...</div>}
             {productsError && <div className="text-danger">{productsError}</div>}
 
             {!productsLoading && !productsError && (
               <>
-                <div className="row">
+                <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
                   {products.length > 0 ? (
                     products.map(product => {
                       const id = product.id || product._id;
                       const quantity = quantities[id] || 0;
                       return (
-                        <div className="col-md-4 mb-4" key={id}>
-                          <div className="border rounded-lg shadow-sm p-3 position-relative h-100">
+                        <div className="col" key={id}>
+                          <div className="card h-100">
                             <div className="bg-light d-flex align-items-center justify-content-center mb-3" style={{ height: '160px' }}>
                               <img
                                 src={product.image_url}
@@ -116,16 +221,18 @@ function Products() {
                                 </span>
                               )}
                             </div>
-                            <h6 className="fw-bold">{product.name}</h6>
-                            <span className="badge bg-light border text-muted mb-2">{product.category || 'General'}</span>
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                              <span className="fw-bold">${product.price}</span>
-                              <span className="text-muted">Stock: {product.stock}</span>
-                            </div>
-                            <div className="d-flex justify-content-between align-items-center border rounded px-2 py-1 w-100">
-                              <button className="btn btn-sm btn-light count-btn" onClick={() => handleQuantityChange(id, -1)}>−</button>
-                              <span>{quantity}</span>
-                              <button className="btn btn-sm btn-light count-btn" onClick={() => handleQuantityChange(id, 1)}>+</button>
+                            <div className="card-body">
+                              <h5 className="card-title">{product.name}</h5>
+                              <span className="badge bg-light border text-muted mb-2">{product.category || 'General'}</span>
+                              <div className="d-flex justify-content-between align-items-center mb-2">
+                                <span className="fw-bold">${product.price}</span>
+                                <span className="text-muted">Stock: {product.stock}</span>
+                              </div>
+                              <div className="d-flex justify-content-between align-items-center border rounded px-2 py-1 w-100">
+                                <button className="btn btn-sm btn-light count-btn" onClick={() => handleQuantityChange(id, -1)}>−</button>
+                                <span>{quantity}</span>
+                                <button className="btn btn-sm btn-light count-btn" onClick={() => handleQuantityChange(id, 1)}>+</button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -166,10 +273,10 @@ function Products() {
         </div>
 
         {/* ORDER SUMMARY */}
-        <div className="col-3">
+        <div className="col-12 col-lg-4">
           <div className="mt-5">
             <h4>Order summary</h4>
-            <div className="card p-3 shadow-sm">
+            <div className="card p-3 shadow-sm sticky-top" style={{ top: '20px' }}>
               {Object.keys(cartItems).filter(id => (quantities[id] || 0) > 0).length === 0 ? (
                 <div className="text-center py-5 text-muted">Your cart is empty</div>
               ) : (
@@ -193,7 +300,10 @@ function Products() {
                         </div>
                         <div className="text-end">
                           <div className="fw-bold small">${item.price}</div>
-                          <button className="btn btn-sm btn-link text-danger p-0" onClick={() => handleQuantityChange(id, -quantity)}>
+                          <button 
+                            className="btn btn-sm btn-link text-danger p-0" 
+                            onClick={() => handleDeleteItem(id)}
+                          >
                             <i style={{ fontSize: '26px' }} className="fa-solid fa-square-minus"></i>
                           </button>
                         </div>
@@ -230,6 +340,12 @@ function Products() {
                             <strong>${total.toFixed(2)}</strong>
                           </div>
                           <button className="btn btn-dark w-100 mt-3">Proceed to Checkout</button>
+                          <button 
+                            className="btn btn-outline-danger w-100 mt-2" 
+                            onClick={handleClearCart}
+                          >
+                            Clear Cart
+                          </button>
                         </>
                       );
                     })()}

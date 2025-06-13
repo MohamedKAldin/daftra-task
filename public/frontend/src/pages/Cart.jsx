@@ -19,18 +19,31 @@ function Cart() {
 
     setQuantities(storedQuantities);
 
-    // Fetch all products then filter those in cart
-    ProductService.getAllProducts()
-      .then(({ items }) => {
-        const cartProducts = items.filter(p => {
-          const id = p.id || p._id;
-          return storedQuantities[id] > 0;
-        });
-        setCartItems(cartProducts);
+    // Fetch only the products that are in the cart
+    const fetchCartProducts = async () => {
+      try {
+        // Only get IDs of products that have quantity > 0
+        const productIds = Object.entries(storedQuantities)
+          .filter(([_, quantity]) => quantity > 0)
+          .map(([id]) => Number(id));
+
+        if (productIds.length === 0) {
+          setCartItems([]);
+          setLoading(false);
+          return;
+        }
+
+        const products = await ProductService.getProductsByIds(productIds);
+        setCartItems(products);
         setError(null);
-      })
-      .catch(() => setError('Failed to load cart products.'))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError('Failed to load cart products.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartProducts();
   }, []);
 
   const updateQuantity = (productId, change) => {
@@ -71,37 +84,38 @@ function Cart() {
         <div className="alert alert-info mt-4">Your cart is empty.</div>
       ) : (
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-12 col-lg-8">
             {cartItems.map(product => {
               const id = product.id || product._id;
               const qty = quantities[id] || 0;
 
               return (
-                <div key={id} className="d-flex align-items-center justify-content-between border-bottom py-3">
-                  <div className="d-flex align-items-center">
+                <div key={id} className="d-flex flex-column flex-md-row align-items-center justify-content-between border-bottom py-3">
+                  <div className="d-flex flex-column flex-md-row align-items-center text-center text-md-start mb-3 mb-md-0">
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      style={{ width: '160px', height: '160px', objectFit: 'cover', borderRadius: '8px' }}
+                      style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px' }}
+                      className="mb-3 mb-md-0"
                     />
-                    <div className="ms-3">
+                    <div className="ms-md-3">
                       <h5 className="mb-1">{product.name}</h5>
                       <div className="text-muted">${product.price} × {qty}</div>
-                        <div className="d-flex justify-content-between align-items-center border rounded px-2 py-1 w-100 mt-3">
-                            <button
-                            className="btn btn-sm btn-light count-btn"
-                            onClick={() => updateQuantity(id, -1)}
-                            >−</button>
-                            <input type="text" className="form-control text-center" value={qty} readOnly />
-                            <button
-                            className="btn btn-sm btn-light count-btn"
-                            onClick={() => updateQuantity(id, 1)}
-                            >+</button>
-                        </div>
+                      <div className="d-flex justify-content-center justify-content-md-start align-items-center border rounded px-2 py-1 w-100 mt-3" style={{ maxWidth: '150px' }}>
+                        <button
+                          className="btn btn-sm btn-light count-btn"
+                          onClick={() => updateQuantity(id, -1)}
+                        >−</button>
+                        <input type="text" className="form-control text-center" value={qty} readOnly />
+                        <button
+                          className="btn btn-sm btn-light count-btn"
+                          onClick={() => updateQuantity(id, 1)}
+                        >+</button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="text-end">
+                  <div className="text-center text-md-end">
                     <h6 className="mb-0">${(product.price * qty).toFixed(2)}</h6>
                     <button className="btn btn-sm btn-link text-danger" onClick={() => updateQuantity(id, -qty)}>
                       Remove
@@ -112,8 +126,8 @@ function Cart() {
             })}
           </div>
 
-          <div className="col-md-4">
-            <div className="card p-4 shadow-sm">
+          <div className="col-12 col-lg-4 mt-4 mt-lg-0">
+            <div className="card p-4 shadow-sm sticky-top" style={{ top: '20px' }}>
               <h4 className="mb-4">Summary</h4>
 
               <div className="d-flex justify-content-between mb-2">
