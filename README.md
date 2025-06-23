@@ -97,7 +97,7 @@ php artisan migrate:fresh --seed
 php artisan serve
 ```
 
-## Test Credentials
+## Test Account
 - Email: muhammedk.aldin@gmail.com
 - Password: Test@123456
 
