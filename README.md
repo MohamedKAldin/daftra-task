@@ -1,5 +1,3 @@
-# Daftra Project Documentation
-
 ## Project Architecture
 
 ### Frontend (React)
@@ -108,9 +106,3 @@ php artisan serve
 - Token validation
 - CSRF protection
 - CORS configuration
-
-## Time Tracking
-- Estimated time : 9 h
-- Actual time : 8 h
-- Recieve date : 12/6/2025 - 6 PM
-- Submition date : 13/6/2025 - 2 AM 
